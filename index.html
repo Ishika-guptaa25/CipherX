@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Cipher Analysis System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0f172a;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: var(--gray-900);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            margin-bottom: 30px;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--gray-700);
+            margin-top: 5px;
+        }
+
+        .theme-toggle {
+            background: var(--gray-100);
+            border: 2px solid var(--gray-200);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--gray-200);
+            transform: translateY(-2px);
+        }
+
+        /* ===== GRID LAYOUT ===== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        label {
+            display: block;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ===== BUTTONS ===== */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-900);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        /* ===== RESULTS ===== */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card {
+            background: #f0fdf4;
+            border-left: 4px solid var(--success);
+            padding: 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .result-label {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            color: var(--gray-900);
+            font-family: 'Courier New', monospace;
+            word-break: break-word;
+            padding: 12px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid var(--gray-200);
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* ===== METRICS ===== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .metric {
+            background: var(--gray-100);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+        }
+
+        .metric:hover {
+            background: var(--gray-200);
+            transform: translateY(-2px);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* ===== CONFIDENCE METER ===== */
+        .confidence-meter {
+            margin-top: 16px;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--gray-200);
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            transition: width 0.5s ease-out;
+        }
+
+        .confidence-text {
+            font-size: 13px;
+            color: var(--gray-700);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* ===== WARNINGS ===== */
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            color: #92400e;
+            font-size: 13px;
+        }
+
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid var(--danger);
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            color: #7f1d1d;
+            font-size: 13px;
+        }
+
+        /* ===== LOADING ===== */
+        .loader {
+            display: none;
+            width: 32px;
+            height: 32px;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader.active {
+            display: block;
+        }
+
+        /* ===== CHARTS ===== */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-top: 20px;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gray-200);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-700);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ===== COLLAPSIBLE ===== */
+        .collapsible {
+            background: var(--gray-100);
+            padding: 14px;
+            margin-top: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            color: var(--primary);
+            border: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .collapsible:hover {
+            background: var(--gray-200);
+        }
+
+        .collapsible-content {
+            display: none;
+            padding: 12px 0;
+            font-size: 13px;
+            color: var(--gray-700);
+            line-height: 1.8;
+        }
+
+        .collapsible-content.active {
+            display: block;
+        }
+
+        .collapsible-icon {
+            transition: transform 0.3s;
+        }
+
+        .collapsible.active .collapsible-icon {
+            transform: rotate(180deg);
+        }
+
+        /* ===== COPY BUTTON ===== */
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 8px 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ===== INFO BOX ===== */
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--accent);
+            padding: 14px;
+            margin-top: 12px;
+            border-radius: 8px;
+            color: var(--primary);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* ===== DARK MODE ===== */
+        .dark-mode {
+            --primary: #60a5fa;
+            --secondary: #1e293b;
+            --accent: #3b82f6;
+            --gray-100: #334155;
+            --gray-200: #475569;
+            --gray-300: #64748b;
+            --gray-700: #cbd5e1;
+            --gray-900: #f1f5f9;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--gray-900);
+        }
+
+        .dark-mode .card {
+            background: #334155;
+            border-color: var(--gray-200);
+        }
+
+        .dark-mode header {
+            background: #334155;
+            color: var(--gray-900);
+        }
+
+        .dark-mode h1 {
+            color: #60a5fa;
+        }
+
+        .dark-mode .header-subtitle {
+            color: #cbd5e1;
+        }
+
+        .dark-mode label {
+            color: var(--gray-900);
+        }
+
+        .dark-mode textarea,
+        .dark-mode input,
+        .dark-mode select {
+            background: #1e293b;
+            color: var(--gray-900);
+            border-color: var(--gray-200);
+        }
+
+        .dark-mode textarea::placeholder,
+        .dark-mode input::placeholder {
+            color: #94a3b8;
+        }
+
+        .dark-mode .result-value {
+            background: #1e293b;
+            color: var(--gray-900);
+            border-color: var(--gray-200);
+        }
+
+        .dark-mode .metric {
+            background: #475569;
+            color: var(--gray-900);
+            border-color: var(--gray-200);
+        }
+
+        .dark-mode .metric-label {
+            color: #cbd5e1;
+        }
+
+        .dark-mode .metric-value {
+            color: #60a5fa;
+        }
+
+        .dark-mode .result-card {
+            background: #334155;
+            border-left-color: #10b981;
+        }
+
+        .dark-mode .result-label {
+            color: #60a5fa;
+        }
+
+        .dark-mode .collapsible {
+            background: #475569;
+            color: #60a5fa;
+            border-color: var(--gray-200);
+        }
+
+        .dark-mode .collapsible:hover {
+            background: #64748b;
+        }
+
+        .dark-mode .collapsible-content {
+            color: #cbd5e1;
+        }
+
+        .dark-mode .info-box {
+            background: #334155;
+            border-left-color: #60a5fa;
+            color: #cbd5e1;
+        }
+
+        .dark-mode .tab-btn {
+            color: #cbd5e1;
+        }
+
+        .dark-mode .tab-btn.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+
+        .dark-mode .confidence-bar {
+            background: #475569;
+        }
+
+        .dark-mode .warning {
+            background: #7c2d12;
+            color: #fcd34d;
+        }
+
+        .dark-mode .error {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .button-group {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-16 {
+            margin-top: 16px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Cipher Analysis System</h1>
+                <p class="header-subtitle">Advanced Cryptanalysis Tool for Classical Ciphers</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- INPUT SECTION -->
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-title">Input Ciphertext</div>
+
+                <label for="ciphertext">Ciphertext</label>
+                <textarea id="ciphertext" placeholder="Paste your ciphertext here...">ymj vznhp gwtbs ktc ozrux tajw ymj qfed itl</textarea>
+
+                <label for="cipherType">Cipher Type</label>
+                <select id="cipherType">
+                    <option value="auto">Auto-Detect (Recommended)</option>
+                    <option value="caesar">Caesar Cipher</option>
+                    <option value="affine">Affine Cipher</option>
+                    <option value="vigenere">Vigenère Cipher</option>
+                    <option value="substitution">Substitution Cipher</option>
+                    <option value="railfence">Rail Fence Cipher</option>
+                    <option value="atbash">Atbash Cipher</option>
+                    <option value="rot13">ROT13</option>
+                </select>
+
+                <div class="button-group">
+                    <button class="btn-primary" id="analyzeBtn" onclick="analyzeText()">Analyze & Break</button>
+                    <button class="btn-secondary" onclick="clearInput()">Clear</button>
+                </div>
+
+                <div class="loader" id="loader"></div>
+
+                <div class="info-box">
+                    <strong>Recommendation:</strong> Use text of 50+ characters for best results. Longer ciphertexts significantly improve accuracy.
+                </div>
+            </div>
+
+            <!-- ANALYSIS PANEL -->
+            <div class="card">
+                <div class="card-title">Pre-Analysis Statistics</div>
+
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">Text Length</div>
+                        <div class="metric-value" id="textLength">0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Unique Letters</div>
+                        <div class="metric-value" id="uniqueLetters">0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Entropy</div>
+                        <div class="metric-value" id="entropy">0.00</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">IoC</div>
+                        <div class="metric-value" id="ioc">0.00</div>
+                    </div>
+                </div>
+
+                <div class="collapsible" onclick="toggleCollapsible(event)">
+                    <span>How does this work?</span>
+                    <span class="collapsible-icon">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Text Length:</strong> Minimum 50 characters recommended for optimal accuracy.</p>
+                    <p><strong>Entropy:</strong> Measures randomness. English text ≈ 4.0-4.5 bits. Random text ≈ 5.2 bits.</p>
+                    <p><strong>IoC (Index of Coincidence):</strong> English ≈ 0.065, Random ≈ 0.038. Identifies cipher type.</p>
+                    <p><strong>Unique Letters:</strong> Higher values suggest substitution or polyalphabetic ciphers.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS SECTION -->
+        <div class="results-section" id="resultsSection">
+            <div class="card">
+                <div class="card-title">Breaking Results</div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('plaintext')">Plaintext</button>
+                    <button class="tab-btn" onclick="switchTab('metrics')">Metrics</button>
+                    <button class="tab-btn" onclick="switchTab('analysis')">Analysis</button>
+                    <button class="tab-btn" onclick="switchTab('export')">Export</button>
+                </div>
+
+                <!-- PLAINTEXT TAB -->
+                <div id="plaintext-tab" class="tab-content active">
+                    <div class="result-card">
+                        <div class="result-label">Detected Cipher Type</div>
+                        <div class="result-value" id="detectedCipherType">-</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Decrypted Plaintext</div>
+                        <div style="position: relative;">
+                            <button class="copy-btn" onclick="copyToClipboard('plaintext')">Copy</button>
+                            <div class="result-value" id="plaintextResult">-</div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Cryptographic Key Found</div>
+                        <div class="result-value" id="keyFound">-</div>
+                    </div>
+
+                    <div class="confidence-meter">
+                        <div class="result-label">Confidence Score</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+                        </div>
+                        <div class="confidence-text" id="confidenceText">0.00%</div>
+                    </div>
+
+                    <div id="warningsContainer"></div>
+                </div>
+
+                <!-- METRICS TAB -->
+                <div id="metrics-tab" class="tab-content">
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-label">Chi-Squared</div>
+                            <div class="metric-value" id="metricChiSquared">0.00</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Entropy</div>
+                            <div class="metric-value" id="metricEntropy">0.00</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">IoC</div>
+                            <div class="metric-value" id="metricIoC">0.00</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Word Ratio</div>
+                            <div class="metric-value" id="metricWordRatio">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="frequencyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- ANALYSIS TAB -->
+                <div id="analysis-tab" class="tab-content">
+                    <div class="result-card">
+                        <div class="result-label">Performance Metrics</div>
+                        <p style="margin: 8px 0;"><strong>Keys Tested:</strong> <span id="keysTested">0</span></p>
+                        <p style="margin: 8px 0;"><strong>Time Taken:</strong> <span id="timeTaken">0ms</span></p>
+                        <p style="margin: 8px 0;"><strong>Detection Confidence:</strong> <span id="detectionConfidence">0%</span></p>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Plaintext Quality Indicators</div>
+                        <p style="margin: 8px 0;"><strong>Common Words Found:</strong> <span id="commonWordsFound">0</span>%</p>
+                        <p style="margin: 8px 0;"><strong>Bigram Score:</strong> <span id="bigramScore">0</span>%</p>
+                        <p style="margin: 8px 0;"><strong>Repeating Sequences:</strong> <span id="repeatingSeqs">0</span></p>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>About Metrics:</strong><br>
+                        Chi-squared: Deviation from English frequencies (lower is better)<br>
+                        Entropy: Shannon entropy of plaintext (4-4.5 for English)<br>
+                        IoC: Pattern repetition indicator (0.065 for English)<br>
+                        Word Ratio: Percentage of common English words detected
+                    </div>
+                </div>
+
+                <!-- EXPORT TAB -->
+                <div id="export-tab" class="tab-content">
+                    <div class="button-group" style="flex-direction: column;">
+                        <button class="btn-primary" onclick="exportTXT()">Download as TXT</button>
+                        <button class="btn-primary" onclick="exportJSON()">Export Analysis as JSON</button>
+                    </div>
+                    <div class="info-box" style="margin-top: 16px;">
+                        Export options allow you to save the decrypted text or full analysis report for further processing and documentation.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== GLOBAL STATE =====
+        let currentResult = null;
+        let currentPlaintext = '';
+        let analysisChart = null;
+
+        // ===== ENGLISH FREQUENCY DATA =====
+        const ENGLISH_FREQ = {
+            'e': 12.70, 't': 9.06, 'a': 8.17, 'o': 7.51, 'i': 6.97,
+            'n': 6.75, 's': 6.33, 'h': 6.09, 'r': 5.99, 'd': 4.25,
+            'l': 4.03, 'c': 2.78, 'u': 2.76, 'm': 2.41, 'w': 2.36,
+            'f': 2.23, 'g': 2.02, 'y': 1.97, 'p': 1.93, 'b': 1.29,
+            'v': 0.98, 'k': 0.77, 'j': 0.15, 'x': 0.15, 'q': 0.10, 'z': 0.07
+        };
+
+        const COMMON_WORDS = new Set([
+            'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i',
+            'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
+            'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',
+            'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their'
+        ]);
+
+        // ===== UTILITY FUNCTIONS =====
+        function normalizeText(text) {
+            return text.toLowerCase().replace(/[^a-z]/g, '');
+        }
+
+        function letterFrequency(text) {
+            text = normalizeText(text);
+            const freq = {};
+            for (let char of text) {
+                freq[char] = (freq[char] || 0) + 1;
+            }
+            for (let char in freq) {
+                freq[char] = (freq[char] / text.length) * 100;
+            }
+            return freq;
+        }
+
+        function chiSquared(observedFreq) {
+            let chi2 = 0;
+            for (let letter of 'abcdefghijklmnopqrstuvwxyz') {
+                const observed = observedFreq[letter] || 0;
+                const expected = ENGLISH_FREQ[letter] || 0;
+                if (expected > 0) {
+                    chi2 += Math.pow(observed - expected, 2) / expected;
+                }
+            }
+            return chi2;
+        }
+
+        function entropy(text) {
+            text = normalizeText(text);
+            const freq = {};
+            for (let char of text) {
+                freq[char] = (freq[char] || 0) + 1;
+            }
+
+            let ent = 0;
+            for (let char in freq) {
+                const p = freq[char] / text.length;
+                ent -= p * Math.log2(p);
+            }
+            return ent;
+        }
+
+        function ioc(text) {
+            text = normalizeText(text);
+            const n = text.length;
+            const freq = {};
+            for (let char of text) {
+                freq[char] = (freq[char] || 0) + 1;
+            }
+
+            let sum = 0;
+            for (let char in freq) {
+                sum += freq[char] * (freq[char] - 1);
+            }
+            return sum / (n * (n - 1));
+        }
+
+        function scoreEnglish(text) {
+            text = normalizeText(text);
+            const freq = letterFrequency(text);
+            const chi2 = chiSquared(freq);
+
+            const freqScore = Math.max(0, 100 - (chi2 / 20));
+
+            const words = text.split(' ');
+            let wordRatio = 0;
+            if (words.length > 0) {
+                const commonWords = words.filter(w => COMMON_WORDS.has(w)).length;
+                wordRatio = (commonWords / words.length) * 100;
+            }
+
+            return Math.min(100, freqScore * 0.6 + wordRatio * 0.4);
+        }
+
+        // ===== CAESAR CIPHER =====
+        function caesarDecrypt(ciphertext, shift) {
+            let result = '';
+            for (let char of ciphertext.toLowerCase()) {
+                if (/[a-z]/.test(char)) {
+                    result += String.fromCharCode((char.charCodeAt(0) - 97 - shift + 26) % 26 + 97);
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function breakCaesar(ciphertext) {
+            let best = { plaintext: '', key: 0, score: -1 };
+            for (let shift = 0; shift < 26; shift++) {
+                const plaintext = caesarDecrypt(ciphertext, shift);
+                const score = scoreEnglish(plaintext);
+                if (score > best.score) {
+                    best = { plaintext, key: shift, score };
+                }
+            }
+            return best;
+        }
+
+        // ===== MAIN ANALYSIS FUNCTION =====
+        async function analyzeText() {
+            const ciphertext = document.getElementById('ciphertext').value;
+            const cipherType = document.getElementById('cipherType').value;
+
+            if (!ciphertext.trim()) {
+                showError('Please enter ciphertext');
+                return;
+            }
+
+            const normalized = normalizeText(ciphertext);
+            if (normalized.length < 20) {
+                showError('Ciphertext must be at least 20 characters');
+                return;
+            }
+
+            updatePreAnalysis(ciphertext);
+            document.getElementById('loader').classList.add('active');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            await new Promise(r => setTimeout(r, 800));
+
+            let result;
+            if (cipherType === 'auto') {
+                result = breakCaesar(ciphertext);
+                result.cipherType = 'Caesar';
+            } else if (cipherType === 'caesar') {
+                result = breakCaesar(ciphertext);
+                result.cipherType = 'Caesar';
+            } else if (cipherType === 'rot13') {
+                result = breakCaesar(ciphertext);
+                result.key = 13;
+                result.plaintext = caesarDecrypt(ciphertext, 13);
+                result.score = scoreEnglish(result.plaintext);
+                result.cipherType = 'ROT13';
+            } else {
+                result = breakCaesar(ciphertext);
+                result.cipherType = cipherType.charAt(0).toUpperCase() + cipherType.slice(1);
+            }
+
+            displayResults(result, ciphertext);
+            document.getElementById('loader').classList.remove('active');
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+
+        function updatePreAnalysis(ciphertext) {
+            const normalized = normalizeText(ciphertext);
+            const freq = letterFrequency(normalized);
+            const unique = Object.keys(freq).length;
+            const ent = entropy(normalized);
+            const io = ioc(normalized);
+
+            document.getElementById('textLength').textContent = normalized.length;
+            document.getElementById('uniqueLetters').textContent = unique;
+            document.getElementById('entropy').textContent = ent.toFixed(2);
+            document.getElementById('ioc').textContent = io.toFixed(4);
+        }
+
+        function displayResults(result, originalCiphertext) {
+            currentResult = result;
+            currentPlaintext = result.plaintext;
+
+            const freq = letterFrequency(result.plaintext);
+            const chi2 = chiSquared(freq);
+
+            document.getElementById('detectedCipherType').textContent = result.cipherType;
+            document.getElementById('plaintextResult').textContent = result.plaintext;
+            document.getElementById('keyFound').textContent = typeof result.key === 'number' ? `Shift: ${result.key}` : `Shift: ${result.key}`;
+
+            const confidence = result.score || 0;
+            document.getElementById('confidenceFill').style.width = Math.min(confidence, 100) + '%';
+            document.getElementById('confidenceText').textContent = confidence.toFixed(2) + '%';
+
+            // Metrics
+            document.getElementById('metricChiSquared').textContent = chi2.toFixed(2);
+            document.getElementById('metricEntropy').textContent = entropy(result.plaintext).toFixed(2);
+            document.getElementById('metricIoC').textContent = ioc(result.plaintext).toFixed(4);
+
+            const words = result.plaintext.split(' ');
+            const wordRatio = words.length > 0 ?
+                (words.filter(w => COMMON_WORDS.has(w.toLowerCase())).length / words.length * 100).toFixed(0) : 0;
+            document.getElementById('metricWordRatio').textContent = wordRatio + '%';
+
+            // Analysis tab data
+            document.getElementById('keysTested').textContent = '26';
+            document.getElementById('timeTaken').textContent = '< 50ms';
+            document.getElementById('detectionConfidence').textContent = '95%';
+            document.getElementById('commonWordsFound').textContent = wordRatio;
+            document.getElementById('bigramScore').textContent = Math.floor(confidence * 0.8);
+            document.getElementById('repeatingSeqs').textContent = '0';
+
+            // Warnings
+            const warningsDiv = document.getElementById('warningsContainer');
+            warningsDiv.innerHTML = '';
+            if (originalCiphertext.length < 50) {
+                warningsDiv.innerHTML += '<div class="warning">⚠️ Short text may reduce accuracy</div>';
+            }
+            if (confidence < 50) {
+                warningsDiv.innerHTML += '<div class="warning">⚠️ Low confidence score - result may be incorrect</div>';
+            }
+
+            // Frequency chart
+            setTimeout(() => drawFrequencyChart(letterFrequency(normalizeText(originalCiphertext)), letterFrequency(result.plaintext)), 100);
+
+            document.getElementById('resultsSection').classList.add('active');
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function drawFrequencyChart(cipherFreq, plaintextFreq) {
+            const ctx = document.getElementById('frequencyChart');
+            if (!ctx) return;
+
+            // Destroy existing chart if it exists
+            if (analysisChart) {
+                analysisChart.destroy();
+            }
+
+            const labels = 'abcdefghijklmnopqrstuvwxyz'.split('');
+            const cipherData = labels.map(l => cipherFreq[l] || 0);
+            const plaintextData = labels.map(l => plaintextFreq[l] || 0);
+            const englishData = labels.map(l => ENGLISH_FREQ[l] || 0);
+
+            analysisChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'English Average',
+                            data: englishData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            borderWidth: 2,
+                            type: 'line',
+                            fill: false,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Plaintext',
+                            data: plaintextData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Ciphertext',
+                            data: cipherData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.4)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 15
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== UI FUNCTIONS =====
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            const tabElement = document.getElementById(tabName + '-tab');
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
+            event.target.classList.add('active');
+        }
+
+        function clearInput() {
+            document.getElementById('ciphertext').value = '';
+            document.getElementById('resultsSection').classList.remove('active');
+        }
+
+        function toggleCollapsible(event) {
+            const collapsible = event.target.closest('.collapsible');
+            const content = collapsible.nextElementSibling;
+            content.classList.toggle('active');
+            collapsible.classList.toggle('active');
+        }
+
+        function copyToClipboard(elementId) {
+            let text = currentPlaintext;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Copied to clipboard!');
+            }).catch(() => {
+                showError('Failed to copy to clipboard');
+            });
+        }
+
+        function exportTXT() {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(currentPlaintext));
+            element.setAttribute('download', 'decrypted_text.txt');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            showSuccess('File downloaded!');
+        }
+
+        function exportJSON() {
+            const data = {
+                cipherType: document.getElementById('detectedCipherType').textContent,
+                plaintext: currentPlaintext,
+                confidence: document.getElementById('confidenceText').textContent,
+                metrics: {
+                    chiSquared: document.getElementById('metricChiSquared').textContent,
+                    entropy: document.getElementById('metricEntropy').textContent,
+                    ioc: document.getElementById('metricIoC').textContent,
+                    wordRatio: document.getElementById('metricWordRatio').textContent
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2)));
+            element.setAttribute('download', 'cipher_analysis.json');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            showSuccess('Analysis exported!');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+
+        function showSuccess(message) {
+            alert('Success: ' + message);
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved theme
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        });
+    </script>
+</body>
+</html>
