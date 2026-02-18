@@ -1,0 +1,33 @@
+# Educational Use License
+
+Copyright (c) 2026. All rights reserved.
+
+## Permission
+
+You may use, copy, modify, and study this software for:
+- Educational purposes in academic institutions
+- Personal learning and skill development
+- Non-commercial security research
+- Teaching cryptography and cryptanalysis
+
+## Restrictions
+
+You may NOT:
+- Use this software for commercial purposes without written permission
+- Break encryption or security measures without authorization
+- Redistribute modified versions without permission
+- Remove copyright or license notices
+- Claim ownership of the software
+
+## Academic Attribution
+
+If you use this software in academic work, you must provide proper attribution:
+"Advanced Cipher Breaker System - [Repository URL]"
+
+## No Warranty
+
+This software is provided "as is" without warranty of any kind. The author is not liable for any damages arising from its use.
+
+## Contact
+
+For commercial use or licensing inquiries, contact the repository owner.
